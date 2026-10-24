@@ -44,34 +44,6 @@ photos and painted art shrink much less.
   Animated PNGs (APNG) are left as is.
 - Files are processed in parallel with Web Workers (one per CPU core, up to 6).
 
-## Development
-
-```bash
-npm install
-npm run dev      # local dev server with hot reload
-npm test         # core tests (Vitest)
-npm run build    # builds into dist/
-npm run preview  # serves dist/ to check the production build
-```
-
-| File | What it does |
-| --- | --- |
-| `src/core/optimize.js` | Optimizes one PNG and decides whether the result is safe |
-| `src/core/pixels.js` | Decodes any PNG to 16-bit RGBA and compares images |
-| `src/worker.js` | Runs the core off the main thread |
-| `src/files.js` | Reads dropped or chosen folders, keeping their paths |
-| `src/output.js` | ZIP, save to folder and CSV |
-| `src/main.js` | User interface |
-
-## Deployment
-
-[.github/workflows/deploy.yml](.github/workflows/deploy.yml) runs the tests, builds and publishes to GitHub Pages on
-every push to `main`. Enable it once under **Settings → Pages → Source: GitHub Actions**. The tool is then available at
-`https://<user-or-org>.github.io/<repository>/`.
-
-`dist/` is a static site, so any other host works too (GitLab Pages, S3, Netlify…). On GitLab Pages, a `pages` job that
-runs `npm ci && npm run build` and publishes `dist/` as `public/` is enough.
-
 ## License
 
 [MIT](LICENSE) © 2026 Ashara Studios
