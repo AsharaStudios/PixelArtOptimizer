@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pixel Art Optimizer</title>
+    <meta
+      name="description"
+      content="Shrink pixel art PNGs exported from Aseprite without changing a single pixel. Everything runs in your browser."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235b4bdb'/%3E%3Cpath d='M9 9h6v6H9zM17 17h6v6h-6zM17 9h6v6h-6z' fill='%23fff'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <p class="eyebrow">Ashara Studios</p>
+        <h1>Pixel Art Optimizer</h1>
+        <p class="lead">Shrink your pixel art PNGs without changing a single pixel.</p>
+        <p class="sublead">
+          Built for sprites, tilesets, UI and animation frames exported from <strong>Aseprite</strong>.
+        </p>
+      </header>
+
+      <section id="start" class="card">
+        <div id="dropzone" class="dropzone">
+          <svg class="dropzone-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M6 14a4 4 0 0 1 4-4h9l4 4h15a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+            <path d="M24 34V21m0 0-5 5m5-5 5 5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <p class="dropzone-title">Drop a folder or your PNG files here</p>
+          <p class="dropzone-hint">Subfolders are kept. Anything that isn't a PNG (like .aseprite files) is skipped.</p>
+          <div class="buttons">
+            <label class="button primary">
+              Choose folder
+              <input id="pick-folder" type="file" webkitdirectory hidden />
+            </label>
+            <label class="button">
+              Choose files
+              <input id="pick-files" type="file" accept=".png,image/png" multiple hidden />
+            </label>
+          </div>
+          <p id="start-message" class="message" role="alert" hidden></p>
+        </div>
+
+        <label class="option">
+          <input id="max-compression" type="checkbox" />
+          <span>
+            <strong>Maximum compression</strong>
+            Saves a little more, but takes about four times longer.
+          </span>
+        </label>
+      </section>
+
+      <section id="work" class="card" hidden>
+        <div class="summary">
+          <div class="stat">
+            <span class="stat-label">Before</span>
+            <span id="stat-before" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">After</span>
+            <span id="stat-after" class="stat-value">—</span>
+          </div>
+          <div class="stat highlight">
+            <span class="stat-label">Saved</span>
+            <span id="stat-saved" class="stat-value">—</span>
+            <span id="stat-saved-bytes" class="stat-label"></span>
+          </div>
+        </div>
+
+        <div class="progress" aria-hidden="true"><div id="progress-bar" class="progress-bar"></div></div>
+        <p id="status" class="status" aria-live="polite"></p>
+        <div id="alert-unsafe" class="alert warn" role="alert" hidden>
+          <span id="alert-unsafe-text"></span>
+          <button class="alert-link" type="button" data-status="unsafe">See which in the report</button>
+        </div>
+        <div id="alert-error" class="alert bad" role="alert" hidden>
+          <span id="alert-error-text"></span>
+          <button class="alert-link" type="button" data-status="error">See which in the report</button>
+        </div>
+
+        <div id="actions" class="buttons actions" hidden>
+          <button id="save-folder" class="button primary" type="button" hidden>Save to a folder</button>
+          <button id="download" class="button primary" type="button">Download ZIP</button>
+          <button id="show-report" class="button" type="button">Report</button>
+          <button id="restart" class="button ghost" type="button">Optimize more</button>
+        </div>
+      </section>
+
+      <dialog id="report" class="report" aria-labelledby="report-title">
+        <div class="report-header">
+          <h2 id="report-title">Optimization report</h2>
+          <button id="report-close" class="button ghost icon" type="button" aria-label="Close report">✕</button>
+        </div>
+        <dl id="report-summary" class="report-summary"></dl>
+        <div id="report-table" class="table-wrap report-table">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-thumb"><span class="visually-hidden">Preview</span></th>
+                <th class="col-file">File</th>
+                <th class="col-folder">Folder</th>
+                <th class="num col-before">Before</th>
+                <th class="num col-size col-after">After</th>
+                <th class="num col-size">Saved</th>
+                <th class="num col-colors">Colors</th>
+                <th class="col-status">Status</th>
+                <th class="col-note">Note</th>
+              </tr>
+            </thead>
+            <tbody id="report-rows"></tbody>
+          </table>
+        </div>
+        <div class="buttons report-actions">
+          <button id="report-copy" class="button" type="button">Copy table</button>
+          <button id="report-csv" class="button ghost" type="button">Download CSV</button>
+        </div>
+      </dialog>
+
+      <section class="tips">
+        <h2>Why it works so well on pixel art</h2>
+        <p>
+          Pixel art uses few colors and large flat areas. That lets each file be stored with an exact color palette and
+          fewer bits per pixel, which usually cuts the size by more than half with zero quality loss. Photos and painted
+          art don't have those properties, so they shrink much less.
+        </p>
+        <h2>Tips for Aseprite exports</h2>
+        <ul>
+          <li>
+            Export at <strong>100% scale</strong> and let the game engine upscale with nearest-neighbor filtering. A
+            sprite exported at 800% has 64 times more pixels to store.
+          </li>
+          <li>Keep your <strong>.aseprite</strong> files as the source; this tool only touches the exported PNGs.</li>
+        </ul>
+      </section>
+
+      <footer class="footer">
+        <p>
+          <strong>Your images never leave your computer.</strong> Everything is processed in this browser; nothing is
+          uploaded to any server.
+        </p>
+        <p>
+          Compression is lossless: every file is compared pixel by pixel with the original before you get it. If it
+          isn't identical or isn't smaller, you get the original back.
+        </p>
+      </footer>
+
+      <p class="credit">
+        Created by <a href="https://asharastudios.com" target="_blank" rel="noopener">Ashara Studios</a> with love
+      </p>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
